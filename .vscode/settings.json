@@ -1,17 +1,24 @@
 {
-    "java.project.sourcePaths": [
-        "src"
-    ],
-    "java.project.outputPath": "bin",
-    "java.project.referencedLibraries": [
-        "c:\\Java\\JavaFX\\lib\\javafx.base.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.controls.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.fxml.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.graphics.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.media.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.swing.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx.web.jar",
-        "c:\\Java\\JavaFX\\lib\\javafx-swt.jar",
-        "C:\\Users\\moham\\OneDrive\\Documents\\GitHub\\SSD-Project\\lib\\mysql-connector-j-8.3.0.jar"
-    ]
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.outputPath": "bin",
+  "java.configuration.runtimes": [
+    
+    {
+      "name": "JavaSE-23",
+      "path": "C:/Java/jdk-23"
+    }
+  ],
+  "java.project.referencedLibraries": [
+    "c:\\Java\\mysql-connector-j-9.1.0\\mysql-connector-j-9.1.0.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.base.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.controls.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.fxml.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.graphics.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.media.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.swing.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx.web.jar",
+    "c:\\Java\\javafx-sdk-23.0.1\\lib\\javafx-swt.jar"
+  ]
 }
