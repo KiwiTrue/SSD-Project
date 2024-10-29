@@ -1,13 +1,19 @@
 {
-    "configurations": [
-        
-        {
-            "type": "java",
-            "name": "App",
-            "request": "launch",
-            "mainClass": "App",
-            "projectName": "projectTest_de631fa2",
-            "vmArgs": "--module-path \"C:/Java/JavaFX/lib\" --add-modules javafx.controls,javafx.fxml"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "java",
+      "name": "App",
+      "request": "launch",
+      "mainClass": "App",
+      "projectName": "projectTest_de631fa2",
+      "vmArgs": "--module-path \"C:\\Java\\JavaFX\\lib\" --add-modules javafx.controls,javafx.fxml"
+    }
+  ],
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-23",
+      "path": "C:/Java/jdk-23",
+      "default": true
+    }
+  ]
 }
