@@ -1,33 +1,21 @@
 {
     "configurations": [
-        {
-            "type": "java",
-            "name": "App",
-            "request": "launch",
-            "mainClass": "App",
-<<<<<<< HEAD
-            "projectName": "SSD-Project_9910100a",
-            "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
-        },
-        {
-            "type": "java",
-            "name": "App",
-            "request": "launch",
-            "mainClass": "App",
-            "projectName": "project_4f9e2f96",
-            "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
-=======
-            "projectName": "project_4f9e2f96",
-            "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
+// to run in the codespace [IMPOSSIBLE] -- STAY ON WINDOWS
+        // {
+        //     "type": "java",
+        //     "name": "App",
+        //     "request": "launch",
+        //     "mainClass": "App",
+        //     "projectName": "SSD-Project_a4533cee",
+        //     "vmArgs": "--module-path lib/ --add-modules javafx.controls,javafx.fxml"
 
->>>>>>> 95a180a (bk)
-        },
+        // },
         {
             "type": "java",
             "name": "App",
             "request": "launch",
             "mainClass": "App",
-            "projectName": "Fitness Managment System",
+            "projectName": "SSD-Project_9910100a",
             "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
         }
     ]
