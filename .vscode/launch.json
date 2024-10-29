@@ -1,19 +1,23 @@
 {
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
   "configurations": [
-    {
-      "type": "java",
-      "name": "App",
-      "request": "launch",
-      "mainClass": "App",
-      "projectName": "projectTest_de631fa2",
-      "vmArgs": "--module-path \"C:\\Java\\JavaFX\\lib\" --add-modules javafx.controls,javafx.fxml"
-    }
-  ],
-  "java.configuration.runtimes": [
-    {
-      "name": "JavaSE-23",
-      "path": "C:/Java/jdk-23",
-      "default": true
-    }
+      {
+          "type": "java",
+          "name": "Current File",
+          "request": "launch",
+          "mainClass": "${file}"
+
+      },
+      {
+          "type": "java",
+          "name": "App",
+          "request": "launch",
+          "mainClass": "App",
+          "projectName": "Lab6_9e7a0202",
+          "vmArgs": "--module-path \"C:/Java/JavaFX/lib\" --add-modules javafx.controls,javafx.fxml"
+      }
   ]
 }
