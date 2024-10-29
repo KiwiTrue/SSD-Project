@@ -7,10 +7,9 @@
   "java.configuration.runtimes": [
     
     {
+      // to be used in windows only!!!!
       "name": "JavaSE-23",
-      "path": "/usr/local/sdkman/candidates/java/23.0.1-oracle/"
-      // to use in windows -- FUCK CODESPACE
-      // "path": "C:/Java/jdk-23"
+      "path": "C:/Java/jdk-23"
     }
   ],
   "java.project.referencedLibraries": [
@@ -21,6 +20,7 @@
     "lib/javafx.fxml.jar",
     "lib/javafx.controls.jar",
     "lib/javafx.base.jar",
-    "lib/javafx-swt.jar"
+    "lib/javafx-swt.jar",
+    "lib/mysql-connector-j-9.1.0.jar"
   ]
 }
