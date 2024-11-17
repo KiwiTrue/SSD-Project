@@ -3,9 +3,9 @@ import java.sql.*;
 public final class DBUtils {
 
     // Database connection details
-    private static String url = "jdbc:mysql://localhost:3306/project";
-    private static String appUsername = "JavaApp";
-    private static String appPassword = "JavaAppPass!123";
+    private static final String url = "jdbc:mysql://localhost:3306/project";
+    private static final String appUsername = "root";
+    private static final String appPassword = "";
 
     // Method to establish a connection to the database
     public static Connection establishConnection(){

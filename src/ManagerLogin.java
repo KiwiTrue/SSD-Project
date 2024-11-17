@@ -189,7 +189,7 @@ public final class ManagerLogin extends Application {
             dialog.showAndWait();
             LocalDate maintenanceDate = datePicker.getValue();
             if (maintenanceDate != null) {
-                String query = "UPDATE equipment SET maintenance_date = ? WHERE name = ?";
+                String query = "UPDATE equipment_reports SET maintenance_date = ? WHERE name = ?";
                 try (PreparedStatement ps = con.prepareStatement(query)) {
                     ps.setString(1, maintenanceDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
                     ps.setString(2, equipmentName);

@@ -5,6 +5,14 @@
             "name": "App",
             "request": "launch",
             "mainClass": "App",
+            "projectName": "SSD-Project_2a2e164e",
+            "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
+        },
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "App",
             "projectName": "SSD-Project_9910100a",
             "vmArgs": "--module-path \"C:/java/javafx-sdk-23.0.1/lib\" --add-modules javafx.controls,javafx.fxml"
         }
