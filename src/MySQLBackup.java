@@ -78,7 +78,6 @@ public final class MySQLBackup {
 
         } catch (IOException | InterruptedException e) {
             System.err.println("Backup failed: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }
