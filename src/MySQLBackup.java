@@ -3,50 +3,81 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public final class MySQLBackup {
+    // Add these constants for paths
+    private static final String MYSQL_PATH = "C:/xampp/mysql/bin/mysqldump.exe";
+    private static final String SEVEN_ZIP_PATH = "C:/Program Files/7-Zip/7z.exe";
     
-    // Method to perform a backup of the MySQL database
     public static void performBackup(String mysqlUser, String mysqlPassword, String zipPassword, String backupPath) {
         try {
+            // Verify mysqldump exists
+            File mysqldumpFile = new File(MYSQL_PATH);
+            if (!mysqldumpFile.exists()) {
+                throw new IOException("mysqldump not found at: " + MYSQL_PATH);
+            }
+
+            // Verify 7zip exists
+            File sevenZipFile = new File(SEVEN_ZIP_PATH);
+            if (!sevenZipFile.exists()) {
+                throw new IOException("7-Zip not found at: " + SEVEN_ZIP_PATH);
+            }
+
+            // Create backup directory if it doesn't exist
+            File backupDir = new File(backupPath);
+            if (!backupDir.exists()) {
+                backupDir.mkdirs();
+            }
             
-            // Create a backup file name with the current date and create a zip file name
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-            String backupName = "project_backup_" + dateFormat.format(new Date()) + ".sql";
-            String zipName = "project_backup_" + dateFormat.format(new Date()) + ".zip";
+            // Create backup file names with timestamps
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+            String timestamp = dateFormat.format(new Date());
+            String backupName = String.format("project_backup_%s.sql", timestamp);
+            String zipName = String.format("project_backup_%s.zip", timestamp);
+            
+            String fullBackupPath = backupPath + File.separator + backupName;
+            String fullZipPath = backupPath + File.separator + zipName;
 
-            // Create a process to run the mysqldump command to backup the database
-            ProcessBuilder dumpProcessBuilder = new ProcessBuilder(
-                    "C:/xampp/mysql/bin/mysqldump", "--user=" + mysqlUser, "--password=" + mysqlPassword, "project"
+            // Create mysqldump process with full path
+            ProcessBuilder dumpBuilder = new ProcessBuilder(
+                MYSQL_PATH,
+                "--user=" + mysqlUser,
+                "--password=" + mysqlPassword,
+                "--databases",
+                "project",
+                "--result-file=" + fullBackupPath
             );
-            dumpProcessBuilder.redirectOutput(new File(backupPath + "/" + backupName));
-            Process dumpProcess = dumpProcessBuilder.start();
-            int dumpExitCode = dumpProcess.waitFor();
-            if (dumpExitCode != 0) {
-                System.out.println("Backup failed: error during dump creation");
-                return;
+
+            // Execute mysqldump
+            Process dumpProcess = dumpBuilder.start();
+            int dumpResult = dumpProcess.waitFor();
+            
+            if (dumpResult == 0) {
+                // Create 7zip process with full path
+                ProcessBuilder zipBuilder = new ProcessBuilder(
+                    SEVEN_ZIP_PATH,
+                    "a",
+                    "-tzip",
+                    "-p" + zipPassword,
+                    fullZipPath,
+                    fullBackupPath
+                );
+
+                // Execute 7zip
+                Process zipProcess = zipBuilder.start();
+                int zipResult = zipProcess.waitFor();
+                
+                if (zipResult == 0) {
+                    // Delete the original SQL file after successful zip
+                    new File(fullBackupPath).delete();
+                    System.out.println("Backup completed successfully: " + fullZipPath);
+                } else {
+                    System.err.println("Error creating zip file");
+                }
             } else {
-                System.out.println("Backup successful");
+                System.err.println("Error creating database dump");
             }
 
-            // Create a process to run the 7-Zip command to zip the backup file
-            ProcessBuilder zipProcessBuilder = new ProcessBuilder("C:/Program Files/7-Zip/7z.exe", "a", "-tzip", "-p" + zipPassword, backupPath + "/" + zipName, backupPath + "/" + backupName);
-            Process zipProcess = zipProcessBuilder.start();
-            int zipExitCode = zipProcess.waitFor();
-            if (zipExitCode != 0) {
-                System.out.println("Backup failed: error during zip creation");
-                return;
-            } else {
-                System.out.println("Zip successful");
-            }
-
-            // Delete the original backup file
-            File originalBackupFile = new File(backupPath + "/" + backupName);
-            if (!originalBackupFile.delete()) {
-                System.out.println("Backup failed: error during original file deletion");
-                return;
-            } else {
-                System.out.println("Original file deleted");
-            }
         } catch (IOException | InterruptedException e) {
+            System.err.println("Backup failed: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -16,3 +16,8 @@ public final class App extends Application {
         launch(args);
     }
 }
+//admin password
+//manager 1234567890!Aa
+//trainer t_Tarik Tarik123!
+//nutritionist n_Noora Noora123!
+//clerk c_Carl Carl123!

@@ -122,7 +122,7 @@ public final class CustomerRegistration extends Application {
         }
 
         if (!isValidPhoneNumber(phoneNumber)) {
-            showAlert("Invalid Phone Number", "Phone number must be in the format 00974.");
+            showAlert("Invalid Phone Number", "Phone number must be eight '8' digits.");
             return;
         }
 
@@ -202,7 +202,7 @@ public final class CustomerRegistration extends Application {
     // Method to check if the phone number is valid
     private boolean isValidPhoneNumber(String phoneNumber) {
         //must start with 00974 and have 8 digits after that
-        return phoneNumber.matches("^00974\\d{8}$");
+        return phoneNumber.matches("^\\d{8}$");
     }
 
     // Method to go back to the clerk login screen

@@ -3,6 +3,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;  // Add this import
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -15,7 +16,7 @@ public final class UserSignup {
     private Scene signupScene;
     private TextField UsernameField = new TextField();
     private PasswordField PasswordField = new PasswordField();
-    private TextField RoleField = new TextField();
+    private ComboBox<String> RoleField = new ComboBox<>();  // Replace TextField with ComboBox
     private TextField FirstNameField = new TextField();
     private TextField LastNameField = new TextField();
     private Stage stage;
@@ -32,6 +33,10 @@ public final class UserSignup {
         Button signUpButton = new Button("Sign Up");
         Button backButton = new Button("Back to Admin Login");
 
+        // Initialize ComboBox with roles
+        RoleField.getItems().addAll("admin", "manager", "clerk", "trainer", "nutritionist");
+        RoleField.setPromptText("Select Role");
+
         signUpButton.setOnAction(event -> signUp());
         backButton.setOnAction(event -> goBackToAdminLogin());
 
@@ -45,7 +50,7 @@ public final class UserSignup {
                 backButton
         );
 
-        signupScene = new Scene(signUpLayout, 300, 450);
+        signupScene = new Scene(signUpLayout, 300, 550);
         stage.setTitle("User Sign-up");
         stage.setScene(signupScene);
         stage.show();
@@ -55,9 +60,14 @@ public final class UserSignup {
     private void signUp() {
         String username = UsernameField.getText();
         String password = PasswordField.getText();
-        String role = RoleField.getText();
+        String role = RoleField.getValue();  // Get selected value from ComboBox
         String firstname = FirstNameField.getText();
         String lastname = LastNameField.getText();
+
+        if (role == null) {
+            showAlert("Invalid Role", "Please select a role.");
+            return;
+        }
 
         if (!isValidUsername(username)) {
             showAlert("Invalid Username", "Username must be at least 4 characters long and contain at least one lowercase and one uppercase letter.");
