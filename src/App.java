@@ -19,7 +19,7 @@ public final class App extends Application {
 }
 
 //admin password
-//manager 1234567890!Aa
-//trainer t_Tarik Tarik123!
-//nutritionist n_Noora Noora123!
-//clerk c_Carl Carl123!
+//manager 12345!Aa
+//trainer ttt Tarik123!
+//nutritionist nnn Noora123!
+//clerk ccc Carl123!

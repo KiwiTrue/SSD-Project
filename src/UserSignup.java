@@ -34,7 +34,7 @@ public final class UserSignup {
         Button backButton = new Button("Back to Admin Login");
 
         // Initialize ComboBox with roles
-        RoleField.getItems().addAll("admin", "manager", "clerk", "trainer", "nutritionist");
+        RoleField.getItems().addAll("Admin", "Manager", "Clerk", "Trainer", "Nutritionist");
         RoleField.setPromptText("Select Role");
 
         signUpButton.setOnAction(event -> signUp());
