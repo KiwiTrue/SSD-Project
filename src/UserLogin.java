@@ -89,31 +89,31 @@ public final class UserLogin {
                             
                             String role = rs.getString("role");
                             switch (role) {
-                                case "admin":
+                                case "Admin":
                                     
                                     stage.close();
                                     AdminLogin adminLogin = new AdminLogin(stage, username);
                                     adminLogin.initializeComponents();
                                     break;
-                                case "manager":
+                                case "Manager":
                                     
                                     stage.close();
                                     ManagerLogin managerLogin = new ManagerLogin();
                                     managerLogin.start(new Stage());
                                     break;
-                                case "trainer":
+                                case "Trainer":
                                     
                                     stage.close();
                                     TrainerLogin trainerLogin = new TrainerLogin(username); 
                                     trainerLogin.start(new Stage());
                                     break;
-                                case "nutritionist":
+                                case "Nutritionist":
                                     
                                     stage.close();
                                     NutritionistLogin nutritionistLogin = new NutritionistLogin(); 
                                     nutritionistLogin.start(new Stage());
                                     break;
-                                case "clerk":
+                                case "Clerk":
                                     
                                     stage.close();
                                     ClerkLogin clerkLogin = new ClerkLogin();
