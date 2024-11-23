@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.ResultSet;
 
 public final class CustomerRegistration extends Application {
 
@@ -126,6 +127,12 @@ public final class CustomerRegistration extends Application {
             return;
         }
 
+        // Add this check before proceeding with registration
+        if (isPhoneNumberExists(phoneNumber)) {
+            showAlert("Error", "This phone number is already registered.");
+            return;
+        }
+
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
         String subscriptionStartDate = dtf.format(now);
@@ -186,6 +193,22 @@ public final class CustomerRegistration extends Application {
         } catch (SQLException e) {
             showAlert("Error", "An error occurred while registering customer. Maybe the number is registered already.");
         }
+    }
+
+    // Add this new method to check if phone number exists
+    private boolean isPhoneNumberExists(String phoneNumber) {
+        try {
+            String query = "SELECT COUNT(*) FROM customers WHERE phone_number = ?";
+            PreparedStatement statement = con.prepareStatement(query);
+            statement.setString(1, phoneNumber);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     // Method to check if the name is valid

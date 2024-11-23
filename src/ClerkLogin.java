@@ -32,6 +32,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.time.temporal.ChronoUnit;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public final class ClerkLogin extends Application {
 
@@ -271,9 +275,11 @@ public final class ClerkLogin extends Application {
                         validInput = true;
                         
                         try {
-                            String updateQuery = "UPDATE customers SET " + 
-                                field.toLowerCase().replace(" ", "") + 
-                                " = ? WHERE phone_number = ?";
+                            // Fix the field name mapping for phone number
+                            String fieldName = field.equals("Phone Number") ? "phone_number" 
+                                           : field.toLowerCase().replace(" ", "");
+                            
+                            String updateQuery = "UPDATE customers SET " + fieldName + " = ? WHERE phone_number = ?";
                             PreparedStatement updateStmt = con.prepareStatement(updateQuery);
                             updateStmt.setString(1, newValue);
                             updateStmt.setString(2, phoneNumber);
@@ -357,23 +363,28 @@ public final class ClerkLogin extends Application {
         alert.showAndWait();
     }
 
-    private static class ExpiredCustomer {
-        private final String phoneNumber;
-        private final String name;
-        private final String endDate;
-        private final long daysExpired;
+    public static class ExpiredCustomer {
+        private StringProperty phoneNumber;
+        private StringProperty name;
+        private StringProperty endDate;
+        private LongProperty daysExpired;
 
         public ExpiredCustomer(String phoneNumber, String name, String endDate, long daysExpired) {
-            this.phoneNumber = phoneNumber;
-            this.name = name;
-            this.endDate = endDate;
-            this.daysExpired = daysExpired;
+            this.phoneNumber = new SimpleStringProperty(phoneNumber);
+            this.name = new SimpleStringProperty(name);
+            this.endDate = new SimpleStringProperty(endDate);
+            this.daysExpired = new SimpleLongProperty(daysExpired);
         }
 
-        // Getters
-        public String getPhoneNumber() { return phoneNumber; }
-        public String getName() { return name; }
-        public String getEndDate() { return endDate; }
-        public long getDaysExpired() { return daysExpired; }
+        // Getters and setters for JavaFX properties
+        public String getPhoneNumber() { return phoneNumber.get(); }
+        public String getName() { return name.get(); }
+        public String getEndDate() { return endDate.get(); }
+        public long getDaysExpired() { return daysExpired.get(); }
+
+        public StringProperty phoneNumberProperty() { return phoneNumber; }
+        public StringProperty nameProperty() { return name; }
+        public StringProperty endDateProperty() { return endDate; }
+        public LongProperty daysExpiredProperty() { return daysExpired; }
     }
 }
