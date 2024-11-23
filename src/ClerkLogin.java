@@ -9,16 +9,29 @@ import java.util.Optional;
 import java.sql.Timestamp;
 
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.collections.FXCollections;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import java.time.temporal.ChronoUnit;
 
 public final class ClerkLogin extends Application {
 
@@ -84,104 +97,222 @@ public final class ClerkLogin extends Application {
     // Method to track subscriptions
     private void trackSubscription(ActionEvent event) {
         try {
+            Dialog<Void> dialog = new Dialog<>();
+            dialog.setTitle("Expired Subscriptions");
+            dialog.setHeaderText("Customers with Expired Subscriptions");
+
+            // Create TableView
+            TableView<ExpiredCustomer> table = new TableView<>();
+            
+            // Create columns
+            TableColumn<ExpiredCustomer, String> phoneCol = new TableColumn<>("Phone");
+            phoneCol.setCellValueFactory(new PropertyValueFactory<>("phoneNumber"));
+            
+            TableColumn<ExpiredCustomer, String> nameCol = new TableColumn<>("Name");
+            nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+            
+            TableColumn<ExpiredCustomer, String> endDateCol = new TableColumn<>("End Date");
+            endDateCol.setCellValueFactory(new PropertyValueFactory<>("endDate"));
+            
+            TableColumn<ExpiredCustomer, Long> daysExpiredCol = new TableColumn<>("Days Expired");
+            daysExpiredCol.setCellValueFactory(new PropertyValueFactory<>("daysExpired"));
+
+            table.getColumns().addAll(phoneCol, nameCol, endDateCol, daysExpiredCol);
+
+            // Fetch expired subscriptions
             LocalDate currentDate = LocalDate.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            String formattedCurrentDate = currentDate.format(formatter);
-            
-            String query = "SELECT * FROM customers WHERE subscription_end < ?";
+            String query = "SELECT phone_number, firstname, lastname, subscription_end FROM customers WHERE subscription_end < ?";
             PreparedStatement statement = con.prepareStatement(query);
-            statement.setString(1, formattedCurrentDate);
+            statement.setString(1, currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
             
-            ResultSet resultSet = statement.executeQuery();
+            ResultSet rs = statement.executeQuery();
+            ObservableList<ExpiredCustomer> expiredCustomers = FXCollections.observableArrayList();
             
-            if (!resultSet.isBeforeFirst()) {
-                showAlert("Subscription Tracking", "No accounts with expired subscriptions found.");
-            } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Accounts with expired subscriptions:\n\n");
-                while (resultSet.next()) {
-                    String customerId = resultSet.getString("phone_number");
-                    String subscriptionEndDate = resultSet.getString("subscription_end");
-                    sb.append("phone_number: ").append(customerId).append(", Subscription End Date: ").append(subscriptionEndDate).append("\n");
-                }
-                showAlert("Subscription Tracking", sb.toString());
+            while (rs.next()) {
+                String phone = rs.getString("phone_number");
+                String name = rs.getString("firstname") + " " + rs.getString("lastname");
+                String endDate = rs.getString("subscription_end");
+                
+                // Calculate days since expiry
+                LocalDate endLocalDate = LocalDate.parse(endDate.replace("/", "-"));
+                long daysExpired = ChronoUnit.DAYS.between(endLocalDate, currentDate);
+                
+                expiredCustomers.add(new ExpiredCustomer(phone, name, endDate, daysExpired));
             }
+
+            table.setItems(expiredCustomers);
+
+            // Set minimum dimensions
+            table.setMinWidth(500);
+            table.setMinHeight(300);
             
-            DBUtils.closeConnection(con, statement);
+            // Make columns auto-resize
+            table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+            GridPane content = new GridPane();
+            content.add(table, 0, 0);
+            GridPane.setVgrow(table, Priority.ALWAYS);
+            GridPane.setHgrow(table, Priority.ALWAYS);
+            content.setPadding(new Insets(10));
+
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            
+            // If no expired subscriptions found
+            if (expiredCustomers.isEmpty()) {
+                showAlert("No Expired Subscriptions", "There are no expired subscriptions at this time.");
+                return;
+            }
+
+            dialog.showAndWait();
+            
         } catch (SQLException e) {
-            e.printStackTrace();
-            showAlert("Database Error", "Failed to track subscriptions: " + e.getMessage());
+            showAlert("Error", "Failed to fetch expired subscriptions: " + e.getMessage());
         }
     }
-    
+
     // Method to update customer details
     private void updateCustomerDetails(ActionEvent event) {
         try {
-            // Fetch the list of available fields for updating
-            List<String> updateFields = List.of("email", "firstName", "lastName", "phone_number");  // Add more fields if needed
+            // Create a dialog for customer selection
+            Dialog<String> dialog = new Dialog<>();
+            dialog.setTitle("Update Customer Details");
+            dialog.setHeaderText("Select a customer to update");
     
-            // Show a dialog for the admin to choose the field to update
-            ChoiceDialog<String> fieldChoiceDialog = new ChoiceDialog<>(updateFields.get(0), updateFields);
-            fieldChoiceDialog.setTitle("Choose Field to Update");
-            fieldChoiceDialog.setHeaderText(null);
-            fieldChoiceDialog.setContentText("Choose the field to update:");
-            Optional<String> chosenField = fieldChoiceDialog.showAndWait();
-    
-            chosenField.ifPresent(field -> {
-                // Show a dialog to input the new value for the chosen field
-                TextInputDialog valueInputDialog = new TextInputDialog();
-                valueInputDialog.setTitle("Enter New Value");
-                valueInputDialog.setHeaderText(null);
-                valueInputDialog.setContentText("Enter the new value for " + field + ":");
-                Optional<String> newValue = valueInputDialog.showAndWait();
-    
-                newValue.ifPresent(newValueStr -> {
-                    // Update the selected field for a specific user (in this case, updating by phone number)
-                    String phoneNumberToUpdate = getPhoneNumberToUpdate();  // Implement the logic to get the phone number you want to update
-                    if (phoneNumberToUpdate != null) {
-                        try {
-                            Connection con = DBUtils.establishConnection();
-                            String updateQuery = "UPDATE users SET " + field.toLowerCase() + " = ? WHERE phone_number = ?";
-                            PreparedStatement updateStatement = con.prepareStatement(updateQuery);
-                            updateStatement.setString(1, newValueStr);
-                            updateStatement.setString(2, phoneNumberToUpdate);
-                            int rowsAffected = updateStatement.executeUpdate();
-    
-                            if (rowsAffected > 0) {
-                                showAlert("Update Successful", "User account updated successfully.");
-                                
-                                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
-                                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
-                                String action = "Customer details updated";
-                                PreparedStatement logStatement = con.prepareStatement(logQuery);
-                                logStatement.setString(1, GetMacAddress.getMacAddress());
-                                logStatement.setTimestamp(2, timeStamp);
-                                logStatement.setString(3, action);
-                                logStatement.executeUpdate();
-                            } else {
-                                showAlert("Update Failed", "Failed to update user account.");
+            // Create a dropdown list of customers
+            ComboBox<String> customerComboBox = new ComboBox<>();
+            ObservableList<String> customers = FXCollections.observableArrayList();
+            
+            // Fetch customers from database
+            String query = "SELECT phone_number, firstname, lastname FROM customers";
+            PreparedStatement stmt = con.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                String customerInfo = String.format("%s - %s %s", 
+                    rs.getString("phone_number"),
+                    rs.getString("firstname"),
+                    rs.getString("lastname"));
+                customers.add(customerInfo);
+            }
+            
+            customerComboBox.setItems(customers);
+            
+            // Create the dialog layout
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+            grid.add(new Label("Select Customer:"), 0, 0);
+            grid.add(customerComboBox, 1, 0);
+            
+            dialog.getDialogPane().setContent(grid);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            
+            // Show customer selection dialog
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == ButtonType.OK) {
+                    return customerComboBox.getValue();
+                }
+                return null;
+            });
+            
+            Optional<String> customerResult = dialog.showAndWait();
+            
+            customerResult.ifPresent(customer -> {
+                String phoneNumber = customer.split("-")[0].trim();
                 
-                                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
-                                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
-                                String action = "Customer details update failed";
-                                PreparedStatement logStatement = con.prepareStatement(logQuery);
-                                logStatement.setString(1, GetMacAddress.getMacAddress());
-                                logStatement.setTimestamp(2, timeStamp);
-                                logStatement.setString(3, action);
-                                logStatement.executeUpdate();
+                // Create a dialog for field selection
+                List<String> updateFields = List.of(
+                    "Email",
+                    "First Name",
+                    "Last Name",
+                    "Phone Number"
+                );
+                
+                ChoiceDialog<String> fieldChoice = new ChoiceDialog<>(updateFields.get(0), updateFields);
+                fieldChoice.setTitle("Select Field to Update");
+                fieldChoice.setHeaderText("Which field would you like to update?");
+                fieldChoice.setContentText("Choose field:");
+                
+                Optional<String> fieldResult = fieldChoice.showAndWait();
+                
+                fieldResult.ifPresent(field -> {
+                    boolean validInput = false;
+                    while (!validInput) {
+                        TextInputDialog valueDialog = new TextInputDialog();
+                        valueDialog.setTitle("Enter New Value");
+                        valueDialog.setHeaderText("Enter new " + field);
+                        valueDialog.setContentText("New value:");
+                        
+                        Optional<String> valueResult = valueDialog.showAndWait();
+                        
+                        if (!valueResult.isPresent()) {
+                            // User clicked cancel
+                            break;
+                        }
+                        
+                        String newValue = valueResult.get();
+                        
+                        // Validate input based on field type
+                        if (field.equals("Email")) {
+                            if (!isValidEmail(newValue)) {
+                                showAlert("Error", "Invalid email format. Please try again.");
+                                continue;
                             }
-    
-                            DBUtils.closeConnection(con, updateStatement);
+                        } else if (field.equals("Phone Number")) {
+                            if (!isValidPhoneNumber(newValue)) {
+                                showAlert("Error", "Phone number must be 8 digits. Please try again.");
+                                continue;
+                            }
+                        }
+                        
+                        // If we reach here, input is valid
+                        validInput = true;
+                        
+                        try {
+                            String updateQuery = "UPDATE customers SET " + 
+                                field.toLowerCase().replace(" ", "") + 
+                                " = ? WHERE phone_number = ?";
+                            PreparedStatement updateStmt = con.prepareStatement(updateQuery);
+                            updateStmt.setString(1, newValue);
+                            updateStmt.setString(2, phoneNumber);
+                            
+                            int rowsAffected = updateStmt.executeUpdate();
+                            if (rowsAffected > 0) {
+                                showAlert("Success", "Customer details updated successfully");
+                                logAction("Customer details updated");
+                            } else {
+                                showAlert("Error", "Failed to update customer details");
+                                logAction("Customer details update failed");
+                            }
                         } catch (SQLException e) {
-                            e.printStackTrace();
-                            showAlert("Database Error", "Failed to connect to the database.");
+                            showAlert("Error", "Database error: " + e.getMessage());
                         }
                     }
                 });
             });
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert("Error", "An error occurred while updating the account.");
+            
+        } catch (SQLException e) {
+            showAlert("Error", "Failed to fetch customers: " + e.getMessage());
+        }
+    }
+    
+    private boolean isValidEmail(String email) {
+        return email.matches("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return phoneNumber.matches("^\\d{8}$");
+    }
+    
+    private void logAction(String action) throws SQLException {
+        String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
+        try (PreparedStatement logStatement = con.prepareStatement(logQuery)) {
+            logStatement.setString(1, GetMacAddress.getMacAddress());
+            logStatement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            logStatement.setString(3, action);
+            logStatement.executeUpdate();
         }
     }
     
@@ -224,5 +355,25 @@ public final class ClerkLogin extends Application {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private static class ExpiredCustomer {
+        private final String phoneNumber;
+        private final String name;
+        private final String endDate;
+        private final long daysExpired;
+
+        public ExpiredCustomer(String phoneNumber, String name, String endDate, long daysExpired) {
+            this.phoneNumber = phoneNumber;
+            this.name = name;
+            this.endDate = endDate;
+            this.daysExpired = daysExpired;
+        }
+
+        // Getters
+        public String getPhoneNumber() { return phoneNumber; }
+        public String getName() { return name; }
+        public String getEndDate() { return endDate; }
+        public long getDaysExpired() { return daysExpired; }
     }
 }

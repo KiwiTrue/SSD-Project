@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 public final class CustomerRenew extends Application {
 
@@ -114,34 +115,58 @@ public final class CustomerRenew extends Application {
             return;
         }
 
-        LocalDateTime subscriptionEndDate;
-        if (selectedDuration.equals("1 Month")) {
-            subscriptionEndDate = now.plusMonths(1);
-        } else if (selectedDuration.equals("3 Months")) {
-            subscriptionEndDate = now.plusMonths(3);
-        } else if (selectedDuration.equals("6 Months")) {
-            subscriptionEndDate = now.plusMonths(6);
-        } else if (selectedDuration.equals("12 Months")) {
-            subscriptionEndDate = now.plusMonths(12);
-        } else {
-            showAlert("Error", "Invalid subscription duration.");
-            return;
-        }
-
-        String subscriptionEndDateStr = dtf.format(subscriptionEndDate);
-
-        boolean trainerNeeded = trainerNeededCheckbox.isSelected();
-        boolean nutritionistNeeded = nutritionistNeededCheckbox.isSelected();
-        String trainerAssigned = trainerNeeded ? "needed" : "not needed";
-        String nutritionistAssigned = nutritionistNeeded ? "needed" : "not needed";
         try {
-            String updateQuery = "UPDATE customers SET subscription_start = ?, subscription_end = ?, trainer_assigned = ?, nutritionist_assigned = ? WHERE phone_number = ?";
+            // First, get the current subscription end date
+            String checkQuery = "SELECT subscription_end FROM customers WHERE phone_number = ?";
+            PreparedStatement checkStatement = con.prepareStatement(checkQuery);
+            checkStatement.setString(1, phoneNumber);
+            ResultSet rs = checkStatement.executeQuery();
+
+            if (!rs.next()) {
+                showAlert("Error", "Customer not found.");
+                return;
+            }
+
+            String currentEndDateStr = rs.getString("subscription_end");
+            // Fix: Parse as LocalDate instead of LocalDateTime
+            LocalDateTime currentEndDate = LocalDate.parse(currentEndDateStr.replace("/", "-"), 
+                DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                .atStartOfDay(); // Convert LocalDate to LocalDateTime
+
+            LocalDateTime newEndDate;
+
+            // If current subscription is expired, start from today
+            // Otherwise, add the new duration to the current end date
+            if (currentEndDate.isBefore(now)) {
+                newEndDate = now;
+            } else {
+                newEndDate = currentEndDate;
+            }
+
+            // Add the selected duration
+            if (selectedDuration.equals("1 Month")) {
+                newEndDate = newEndDate.plusMonths(1);
+            } else if (selectedDuration.equals("3 Months")) {
+                newEndDate = newEndDate.plusMonths(3);
+            } else if (selectedDuration.equals("6 Months")) {
+                newEndDate = newEndDate.plusMonths(6);
+            } else if (selectedDuration.equals("12 Months")) {
+                newEndDate = newEndDate.plusMonths(12);
+            }
+
+            String subscriptionEndDateStr = dtf.format(newEndDate);
+
+            boolean trainerNeeded = trainerNeededCheckbox.isSelected();
+            boolean nutritionistNeeded = nutritionistNeededCheckbox.isSelected();
+            String trainerAssigned = trainerNeeded ? "needed" : "not needed";
+            String nutritionistAssigned = nutritionistNeeded ? "needed" : "not needed";
+
+            String updateQuery = "UPDATE customers SET subscription_end = ?, trainer_assigned = ?, nutritionist_assigned = ? WHERE phone_number = ?";
             PreparedStatement updateStatement = con.prepareStatement(updateQuery);
-            updateStatement.setString(1, dtf.format(now));
-            updateStatement.setString(2, subscriptionEndDateStr);
-            updateStatement.setString(3, trainerAssigned);
-            updateStatement.setString(4, nutritionistAssigned);
-            updateStatement.setString(5, phoneNumber);
+            updateStatement.setString(1, subscriptionEndDateStr);
+            updateStatement.setString(2, trainerAssigned);
+            updateStatement.setString(3, nutritionistAssigned);
+            updateStatement.setString(4, phoneNumber);
 
             int rowsUpdated = updateStatement.executeUpdate();
 
