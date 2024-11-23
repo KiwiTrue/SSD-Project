@@ -279,9 +279,9 @@ public final class AdminLogin {
     // Method to update a user account
     private void updateAccount() {
         try {
-            // First, fetch all usernames from database
+            // First, fetch all usernames from database except admin
             Connection con = DBUtils.establishConnection();
-            String usersQuery = "SELECT username FROM users";
+            String usersQuery = "SELECT username FROM users WHERE role != 'Admin'";
             PreparedStatement userStatement = con.prepareStatement(usersQuery);
             ResultSet rs = userStatement.executeQuery();
             
@@ -290,6 +290,11 @@ public final class AdminLogin {
                 usernames.add(rs.getString("username"));
             }
             
+            if (usernames.isEmpty()) {
+                showAlert("No Users", "There are no non-admin users to update.");
+                return;
+            }
+
             // Show dialog to select user
             ChoiceDialog<String> userChoiceDialog = new ChoiceDialog<>(usernames.get(0), usernames);
             userChoiceDialog.setTitle("Select User");
@@ -309,48 +314,26 @@ public final class AdminLogin {
                 Optional<String> chosenField = fieldChoiceDialog.showAndWait();
 
                 chosenField.ifPresent(field -> {
-                    TextInputDialog valueInputDialog = new TextInputDialog();
-                    valueInputDialog.setTitle("Enter New Value");
-                    valueInputDialog.setHeaderText(null);
-                    valueInputDialog.setContentText("Enter the new value for " + field + ":");
-                    Optional<String> newValue = valueInputDialog.showAndWait();
+                    if (field.equals("Role")) {
+                        // Show role selection dialog
+                        List<String> roles = List.of("Manager", "Clerk", "Trainer", "Nutritionist");
+                        ChoiceDialog<String> roleDialog = new ChoiceDialog<>(roles.get(0), roles);
+                        roleDialog.setTitle("Select New Role");
+                        roleDialog.setHeaderText(null);
+                        roleDialog.setContentText("Choose the new role:");
+                        Optional<String> newRole = roleDialog.showAndWait();
 
-                    newValue.ifPresent(newValueStr -> {
-                        try {
-                            String updateQuery = "UPDATE users SET " + field.toLowerCase() + " = ? WHERE username = ?";
-                            PreparedStatement updateStatement = con.prepareStatement(updateQuery);
-                            updateStatement.setString(1, newValueStr);
-                            updateStatement.setString(2, username);
-                            int rowsAffected = updateStatement.executeUpdate();
+                        newRole.ifPresent(roleValue -> updateUserField(username, "role", roleValue));
+                    } else {
+                        // For other fields, show text input dialog
+                        TextInputDialog valueInputDialog = new TextInputDialog();
+                        valueInputDialog.setTitle("Enter New Value");
+                        valueInputDialog.setHeaderText(null);
+                        valueInputDialog.setContentText("Enter the new value for " + field + ":");
+                        Optional<String> newValue = valueInputDialog.showAndWait();
 
-                            if (rowsAffected > 0) {
-                                showAlert("Update Successful", "User account updated successfully.");
-                                
-                                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
-                                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
-                                String action = "User account updated";
-                                PreparedStatement logStatement = con.prepareStatement(logQuery);
-                                logStatement.setString(1, GetMacAddress.getMacAddress());
-                                logStatement.setTimestamp(2, timeStamp);
-                                logStatement.setString(3, action);
-                                logStatement.executeUpdate();
-                            } else {
-                                showAlert("Update Failed", "Failed to update user account.");
-                                // Log failed update
-                                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
-                                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
-                                String action = "User account failed to update";
-                                PreparedStatement logStatement = con.prepareStatement(logQuery);
-                                logStatement.setString(1, GetMacAddress.getMacAddress());
-                                logStatement.setTimestamp(2, timeStamp);
-                                logStatement.setString(3, action);
-                                logStatement.executeUpdate();
-                            }
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                            showAlert("Database Error", "Failed to update the account.");
-                        }
-                    });
+                        newValue.ifPresent(value -> updateUserField(username, field.toLowerCase(), value));
+                    }
                 });
             });
             
@@ -358,6 +341,46 @@ public final class AdminLogin {
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error", "An error occurred while updating the account.");
+        }
+    }
+
+    private void updateUserField(String username, String field, String value) {
+        try {
+            Connection con = DBUtils.establishConnection();
+            String updateQuery = "UPDATE users SET " + field + " = ? WHERE username = ?";
+            PreparedStatement updateStatement = con.prepareStatement(updateQuery);
+            updateStatement.setString(1, value);
+            updateStatement.setString(2, username);
+            int rowsAffected = updateStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                showAlert("Update Successful", "User account updated successfully.");
+                
+                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
+                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+                String action = "User account updated - " + field + " changed for " + username;
+                PreparedStatement logStatement = con.prepareStatement(logQuery);
+                logStatement.setString(1, GetMacAddress.getMacAddress());
+                logStatement.setTimestamp(2, timeStamp);
+                logStatement.setString(3, action);
+                logStatement.executeUpdate();
+            } else {
+                showAlert("Update Failed", "Failed to update user account.");
+                // Log failed update
+                String logQuery = "INSERT INTO log (mac_address, log_time, action) VALUES (?, ?, ?)";
+                Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+                String action = "User account failed to update - " + field + " for " + username;
+                PreparedStatement logStatement = con.prepareStatement(logQuery);
+                logStatement.setString(1, GetMacAddress.getMacAddress());
+                logStatement.setTimestamp(2, timeStamp);
+                logStatement.setString(3, action);
+                logStatement.executeUpdate();
+            }
+            
+            DBUtils.closeConnection(con, updateStatement);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Database Error", "Failed to update the account.");
         }
     }
 
