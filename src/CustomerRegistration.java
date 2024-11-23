@@ -147,7 +147,7 @@ public final class CustomerRegistration extends Application {
         String subscriptionEndDateStr = dtf.format(subscriptionEndDate);
 
         try {
-            String query = "INSERT INTO customers (firstname, lastname, email, subscription_start, subscription_end, phone_number, trainer_assigned, nutritionist_assigned, first_subscription, schedule) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO customers (firstname, lastname, email, subscription_start, subscription_end, phone_number, trainer_assigned, nutritionist_assigned, schedule) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = con.prepareStatement(query);
             statement.setString(1, firstname);
             statement.setString(2, lastname);
@@ -157,8 +157,7 @@ public final class CustomerRegistration extends Application {
             statement.setString(6, phoneNumber);
             statement.setString(7, trainerAssigned);
             statement.setString(8, nutritionistAssigned);
-            statement.setString(9, subscriptionStartDate);
-            statement.setString(10, "No schedule yet");
+            statement.setString(9, "No schedule yet");
 
             int rowsInserted = statement.executeUpdate();
             if (rowsInserted > 0) {
